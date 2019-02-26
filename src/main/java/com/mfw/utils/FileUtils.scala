@@ -2,6 +2,9 @@ package com.mfw.utils
 
 import java.io.{File, FileInputStream, PrintWriter}
 
+import org.apache.hadoop.fs.{FileSystem, Path}
+import org.apache.spark.SparkContext
+
 import scala.io.Source
 
 object FileUtils {
@@ -18,22 +21,20 @@ object FileUtils {
     in.close()
     sb.toString()
   }
-
-  def replacTextContent(path1:String,oldstr:String,newstr:String):String={
-    val lines:Iterator[String] = Source.fromFile(path1).getLines()
-    val sb=new StringBuilder
-    lines.foreach{line=>
-      line.trim
-      sb.append(line.replaceAll(oldstr,newstr))
-      sb.append("\n")
+  def deleteFile(path: String): Boolean ={
+    val sparkContext = SparkContext.getOrCreate()
+    val hadoopConf = sparkContext.hadoopConfiguration
+    val hdfs=FileSystem.get(hadoopConf)
+    val path2=new Path(path)
+    if(hdfs.exists(path2)) {
+      hdfs.delete(path2, false)
+    }else{
+      false
     }
-    sb.toString()
-  }
+    }
+
 
   def main(args: Array[String]): Unit = {
     val str=FileUtils.inputToString("/test.sql")
-   // println(str)
-    val str2=FileUtils.replacTextContent("src/main/resources/test.sql","20190120","20190122")
-    println(str2)
   }
 }
